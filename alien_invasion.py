@@ -3,6 +3,7 @@ import pygame
 
 from settings import Settings
 from ship import Ship
+from bullet import Bullet
 
 
 class AlienInvasion:
@@ -15,13 +16,24 @@ class AlienInvasion:
         self.defaultscreen()
         pygame.display.set_caption("AlienInvasion")
         self.ship = Ship(self)
+        self.bullets = pygame.sprite.Group()
 
     def run_game(self):
         """Start main game cycle"""
         while True:
             self._check_events()
             self.ship.update()
+            self._update_bullets()
             self._update_screen()
+
+    def _update_bullets(self):
+        """Update position of bullets and remove old """
+        """Update position of bullets"""
+        self.bullets.update()
+        # Remove bullets
+        for bullet in self.bullets.copy():
+            if bullet.rect.bottom <= 0:
+                self.bullets.remove(bullet)
 
     def _check_events(self):
         """Process keys and mouse clicks"""
@@ -39,6 +51,8 @@ class AlienInvasion:
         """Redraw screen"""
         self.screen.fill(self.settings.bg_color)
         self.ship.blitme()
+        for bullet in self.bullets.sprites():
+            bullet.draw_bullet()
         """Output last element which was drawn"""
         pygame.display.flip()
 
@@ -50,6 +64,12 @@ class AlienInvasion:
     def defaultscreen(self):
         self.screen = pygame.display.set_mode((self.settings.SCREEN_WIDTH,
                                                self.settings.SCREEN_HEIGHT))
+
+    def _fire_bullet(self):
+        """Create bullet and include it into the group"""
+        if len(self.bullets) < self.settings.bullets_alowed:
+            new_bullet = Bullet(self)
+            self.bullets.add(new_bullet)
 
     def _check_keydown_events(self, event):
         if event.key == pygame.K_q:
@@ -74,6 +94,9 @@ class AlienInvasion:
             self.ship.moving_up = True
 
     def _check_keyup_events(self, event):
+        if event.key == pygame.K_RETURN or event.key == pygame.K_e:
+            self._fire_bullet()
+
         if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
             self.ship.moving_right = False
 
